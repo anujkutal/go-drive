@@ -1,0 +1,10 @@
+CREATE EXTENSION IF NOT EXISTS citext;
+
+CREATE TABLE IF NOT EXISTS users (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    email CITEXT UNIQUE NOT NULL,
+    password_hash BYTEA NOT NULL,
+    used_space BIGINT DEFAULT 0,
+    quota_limit BIGINT DEFAULT 1073741824,
+    created_at TIMESTAMP(0) WITH TIME ZONE DEFAULT NOW()
+);
