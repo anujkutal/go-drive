@@ -9,6 +9,7 @@ import (
 
 	"github.com/anujkutal/go-drive/internal/data"
 	"github.com/anujkutal/go-drive/internal/env"
+	"github.com/anujkutal/go-drive/internal/storage"
 	_ "github.com/joho/godotenv/autoload"
 	_ "github.com/lib/pq"
 )
@@ -21,12 +22,16 @@ type config struct {
 	jwt struct {
 		secretKey string
 	}
+	aws struct {
+		s3Bucket string
+	}
 }
 
 type application struct {
-	config config
-	logger *slog.Logger
-	models data.Models
+	config   config
+	logger   *slog.Logger
+	models   data.Models
+	s3Client *storage.S3Client
 }
 
 func main() {
@@ -35,6 +40,7 @@ func main() {
 	cfg.httpPort = env.GetInt("HTTP_PORT", 4000)
 	cfg.db.dsn = env.GetString("DB_DSN", "")
 	cfg.jwt.secretKey = env.GetString("JWT_SECRET_KEY", "")
+	cfg.aws.s3Bucket = env.GetString("S3_BUCKET", "")
 
 	logger := slog.New(slog.NewTextHandler(os.Stdout, nil))
 
@@ -47,10 +53,17 @@ func main() {
 
 	logger.Info("database connection pool established")
 
+	s3Client, err := storage.NewS3Client(context.Background(), cfg.aws.s3Bucket)
+	if err != nil {
+		logger.Error(err.Error())
+		os.Exit(1)
+	}
+
 	app := &application{
-		config: cfg,
-		logger: logger,
-		models: data.NewModels(db),
+		config:   cfg,
+		logger:   logger,
+		models:   data.NewModels(db),
+		s3Client: s3Client,
 	}
 
 	err = app.serve()
