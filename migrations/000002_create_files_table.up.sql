@@ -5,5 +5,6 @@ CREATE TABLE IF NOT EXISTS files (
     s3_key TEXT UNIQUE NOT NULL,
     size BIGINT NOT NULL,
     mime_type TEXT,
+    status TEXT NOT NULL DEFAULT 'pending',
     created_at TIMESTAMP(0) WITH TIME ZONE DEFAULT NOW()
 );
